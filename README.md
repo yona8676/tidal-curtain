@@ -11,7 +11,7 @@ The system embraces **Dynamic Scaling**, calculating the ocean's actual daily hi
 
 ## How to use
 
-**1. Install requirements:**
+1. Install requirements:
 ```bash
 sudo apt install python3-pip -y
 pip3 install requests bleak pytz --break-system-packages
