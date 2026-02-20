@@ -15,5 +15,6 @@ The system embraces **Dynamic Scaling**, calculating the ocean's actual daily hi
 ```bash
 sudo apt install python3-pip -y
 pip3 install requests bleak pytz --break-system-packages
+text
 Find your SwitchBot Curtain MAC addresses via the SwitchBot App and update LEFT_CURTAIN and RIGHT_CURTAIN in tidal_curtain.py.
 Deploy the tidal_curtain.service file to /etc/systemd/system/ for 24/7 automation.
