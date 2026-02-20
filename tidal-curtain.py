@@ -1,38 +1,42 @@
 import asyncio
 import requests
-from datetime import datetime, timezone
+from datetime import datetime
+import pytz
 from bleak import BleakClient
 
 # ==========================================
-# 🌊 Tidal Curtain Settings (Woolloomooloo Bay)
+# 🌊 Tidal Curtain Settings (Sydney Local Time)
 # ==========================================
 LEFT_CURTAIN = "YOUR_LEFT_MAC_HERE"   # e.g., "DF:9E:2B:BD:3B:7B"
 RIGHT_CURTAIN = "YOUR_RIGHT_MAC_HERE" # e.g., "DE:31:2E:85:FA:C2"
 WRITE_UUID = "cba20002-224d-11e6-9fb8-0002a5d5c51b"
 
-# Coordinates for Woolloomooloo Bay
 LAT = "-33.865"
 LON = "151.222"
-
-# 🎨 Artistic Canvas (Tidal Range Mapping)
-MIN_HEIGHT = 0.0  # Low tide baseline (meters)
-MAX_HEIGHT = 2.0  # High tide baseline (meters)
 # ==========================================
 
-def get_water_level():
-    url = f"https://marine-api.open-meteo.com/v1/marine?latitude={LAT}&longitude={LON}&hourly=swell_wave_height"
+def get_water_level_and_daily_range():
+    url = f"https://marine-api.open-meteo.com/v1/marine?latitude={LAT}&longitude={LON}&hourly=swell_wave_height&timezone=Australia%2FSydney&forecast_days=1"
     try:
         response = requests.get(url).json()
-        current_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:00")
+        sydney_tz = pytz.timezone('Australia/Sydney')
+        current_time = datetime.now(sydney_tz).strftime("%Y-%m-%dT%H:00")
+        
         times = response['hourly']['time']
         heights = response['hourly']['swell_wave_height']
         
+        valid_heights = [h for h in heights if h is not None]
+        daily_min = min(valid_heights)
+        daily_max = max(valid_heights)
+        
         if current_time in times:
             idx = times.index(current_time)
-            return heights[idx]
+            current_height = heights[idx]
+            return current_height, daily_min, daily_max
+
     except Exception as e:
         print(f"API Error: {e}")
-    return None
+    return None, None, None
 
 async def send_command(address, position, name):
     print(f"👉 Moving {name} curtain to {position}%...")
@@ -56,25 +60,31 @@ async def move_both_curtains(position):
 
 async def main():
     print("====================================")
-    print(" 🌊 Tidal Curtain Automation 🌊 ")
+    print(" 🌊 Dynamic Tidal Curtain (Sydney Time) 🌊 ")
     print("====================================\n")
     
     while True:
-        height = get_water_level()
+        current_height, daily_min, daily_max = get_water_level_and_daily_range()
         
-        if height is not None:
-            print(f"Current water level: {height} m")
+        if current_height is not None:
+            sydney_tz = pytz.timezone('Australia/Sydney')
+            print(f"[{datetime.now(sydney_tz).strftime('%H:%M:%S')}]")
+            print(f"🌊 Today's Ocean Limit: Min {daily_min}m ~ Max {daily_max}m")
+            print(f"💧 Current Water Level: {current_height}m")
             
-            percent = int(((height - MIN_HEIGHT) / (MAX_HEIGHT - MIN_HEIGHT)) * 100)
+            if daily_max == daily_min:
+                percent = 50 
+            else:
+                percent = int(((current_height - daily_min) / (daily_max - daily_min)) * 100)
+                
             percent = max(0, min(100, percent))
+            final_percent = 100 - percent 
+            print(f"🎭 Artistic Translation: {final_percent}% Closed")
             
-            # Artistic Choice: Inverse Mapping (Close on high tide)
-            percent = 100 - percent 
-            
-            await move_both_curtains(percent)
+            await move_both_curtains(final_percent)
         
-        # Wait 30 minutes before next update
         await asyncio.sleep(1800)
 
 if __name__ == "__main__":
     asyncio.run(main())
+
