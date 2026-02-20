@@ -1,0 +1,14 @@
+[Unit]
+Description=Tidal Curtain Automation
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/ylee138/tidal_curtain.py
+WorkingDirectory=/home/ylee138
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=ylee138
+
+[Install]
+WantedBy=multi-user.target
