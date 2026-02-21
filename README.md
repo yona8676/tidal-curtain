@@ -21,7 +21,8 @@ The system employs **Dynamic Scaling**: every 24 hours, it fetches the ocean's s
 ```
 2. Update Settings in tidal_curtain.py:Update LEFT_CURTAIN and RIGHT_CURTAIN with your SwitchBot MAC addresses. Insert your free STORMGLASS_API_KEY into the script.
 3. Deploy for 24/7 automation:  Copy tidal_curtain.service to /etc/systemd/system/ and run the following commands:
-'''sudo systemctl daemon-reload
+  ```bash
+sudo systemctl daemon-reload
 sudo systemctl enable tidal_curtain.service
 sudo systemctl start tidal_curtain.service
 
